@@ -1,0 +1,20 @@
+Dropped messages: 6
+Recent messages kept: 4
+
+Summary:
+**Summary:**  
+- Badge number: **7781**  
+- Currently learning **LangChain**  
+- Studying **chat history** and its role in maintaining conversation context.
+
+Recent history:
+human: Now I am learning token trimming.
+ai: Token trimming keeps history within a budget.
+human: I am also learning summary memory.
+ai: Summary memory can preserve older information.
+
+Question:
+What is my badge number?
+
+Answer:
+Your badge number is **7781**.

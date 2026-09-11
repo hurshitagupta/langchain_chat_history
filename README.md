@@ -413,3 +413,161 @@ The following controls are demonstrated in Task 3:
 * **Deterministic measurement** — token counts before and after trimming are reported numerically.
 
 Model-specific timeout and retry controls remain part of the model configuration introduced in Task 2.
+
+---
+
+# Task 4 — Summary Memory
+
+## Objective
+
+Preserve important information from older conversation turns even after those messages are removed from the active token window.
+
+Messages dropped during token trimming are summarised, and the resulting summary is included in the system message alongside the recent conversation history.
+
+## Implementation
+
+Task 4 builds on the token trimming implementation from Task 3.
+
+### Identifying Dropped Messages
+
+The full history is first trimmed using the `trim_history` function from Task 3.
+
+The number of removed messages is then calculated:
+
+```python id="ck88f6"
+dropped_count = (
+    len(messages) - len(trimmed_messages)
+)
+```
+
+The older messages that were removed are collected using:
+
+```python id="tqjhn4"
+dropped_messages = messages[:dropped_count]
+```
+
+This separates the conversation into older dropped messages and recent messages that remain within the token budget.
+
+## Summarising Dropped History
+
+The dropped messages are converted into conversation text and passed to a summarisation chain:
+
+The summarisation prompt instructs the model to retain important factual information.
+
+This helps preserve information even when the original message is no longer present in the recent history.
+
+## Summary Validation
+
+The generated summary is validated before it is used:
+
+```python id="63pfha"
+def validate_summary(summary: str) -> None:
+
+    if not summary or not summary.strip():
+        raise ValueError(
+            "Summary cannot be empty."
+        )
+```
+
+An empty summary is therefore rejected rather than being passed into the main chain.
+
+## Summary in the System Message
+
+The generated summary is inserted directly into the system message.
+
+The final model receives:
+
+```text id="o8rs1e"
+System Message
+    └── Summary of old conversation
+
+Recent History
+    └── Messages that still fit in the token budget
+
+Human Message
+    └── Current question
+```
+
+This allows older facts to remain available without sending the complete conversation history to the model.
+
+## Fact Preservation
+
+The example stores the fact:
+
+```text id="nrmtdg"
+My badge number is 7781.
+```
+
+Additional conversation messages cause the original badge-number message to fall outside the recent token window.
+
+The dropped messages are summarised, producing a summary containing the important fact.
+
+The fact is therefore retrieved from the summary rather than from the original message in the recent history.
+
+## Measurement
+
+The implementation reports both:
+
+```text id="jbn9kh"
+Dropped messages: X
+Recent messages kept: Y
+```
+
+This provides measurable evidence that old messages were actually removed from the active history before summarisation.
+
+## Run Task 4
+
+Run the implementation using:
+
+```bash id="sby5a9"
+uv run python -m summary_memory.summary_memory
+```
+
+## Tests
+
+Task 4 includes automated success and failure tests.
+
+### Success Case
+
+This proves that the fact is being preserved through summary memory rather than simply remaining in the recent message history.
+
+### Failure Case
+
+The failure test passes an empty summary to the summary validator. The implementation rejects it with a `ValueError`.
+
+Run the tests using:
+
+```bash id="8a2lqf"
+uv run pytest tests/test_summary_memory.py -v
+```
+
+## Save Evidence
+
+Save the Task 4 execution output:
+
+```bash id="t7fw7h"
+uv run python -m summary_memory.summary_memory > outputs/summary_memory_output.txt
+```
+
+Save the pytest output:
+
+```bash id="98evlx"
+uv run pytest tests/test_summary_memory.py -v > outputs/test_summary_memory.txt
+```
+
+## Guardrails
+
+Task 4 uses the following controls:
+
+* **Token budget** — recent history is restricted using the trimming policy from Task 3.
+* **Timeout** — model calls have a configured timeout.
+* **Retry** — model calls use capped retries.
+* **Output token limit** — model output length is limited.
+* **Summary validation** — an empty generated summary is rejected.
+* **Final output validation** — an empty final model response is rejected.
+* **Secret hygiene** — API credentials and model configuration are loaded from environment variables.
+
+The summary acts as a fallback when older messages can no longer remain inside the active token window.
+
+
+
