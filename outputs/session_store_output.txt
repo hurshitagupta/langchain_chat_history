@@ -1,0 +1,9 @@
+Messages saved:
+human: My badge number is 7781.
+ai: I will remember your badge number.
+
+Messages loaded from SQLite:
+human: My badge number is 7781.
+ai: I will remember your badge number.
+
+Total persisted messages: 2
