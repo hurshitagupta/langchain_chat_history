@@ -1,0 +1,13 @@
+Turn 1:
+Got it—thanks for sharing your badge number.
+
+Turn 2:
+Your badge number is **7781**.
+
+Stored history:
+human: My badge number is 7781.
+ai: Got it—thanks for sharing your badge number.
+human: What is my badge number?
+ai: Your badge number is **7781**.
+
+Total messages stored: 4
