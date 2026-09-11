@@ -1,0 +1,12 @@
+Token budget: 40
+Tokens before trimming: 52
+Tokens after trimming: 34
+
+Messages before trimming: 6
+Messages after trimming: 4
+
+Trimmed history:
+human: I am currently learning how chat history works.
+ai: Chat history allows models to use previous conversation messages.
+human: Now I am learning how token trimming works.
+ai: Token trimming keeps the conversation within a token budget.

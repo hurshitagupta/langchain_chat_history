@@ -262,4 +262,154 @@ Save the test output:
 ```bash id="y1wm0a"
 uv run pytest tests/test_wired_chain.py -v > outputs/test_wired_chain.txt
 ```
+---
 
+# Task 3 — Token Trimming
+
+## Objective
+
+Implement a token trimming policy so that long conversation histories remain within a defined token budget.
+
+The trimming keeps the most recent messages and removes older messages on message boundaries instead of splitting individual messages.
+
+## Implementation
+
+A fixed token budget is defined:
+
+```python id="42lhxk"
+MAX_TOKENS = 40
+```
+
+For this task, a simple deterministic token counter is used:
+
+```python id="2axrxe"
+def simple_token_counter(messages) -> int:
+    return sum(
+        len(message.content.split())
+        for message in messages
+    )
+```
+
+Each whitespace-separated word is counted as one token. This provides a predictable measurement for demonstrating and testing the trimming behaviour.
+
+The conversation is trimmed using LangChain's `trim_messages` utility:
+
+```python id="j2c7vy"
+def trim_history(messages, max_tokens: int = MAX_TOKENS):
+
+    if max_tokens <= 0:
+        raise ValueError("Token budget must be greater than 0.")
+
+    trimmed = trim_messages(
+        messages,
+        max_tokens=max_tokens,
+        strategy="last",
+        token_counter=simple_token_counter,
+        start_on="human",
+    )
+
+    return trimmed
+```
+
+The `last` strategy keeps the most recent conversation messages when the complete history exceeds the available token budget.
+
+Using:
+
+```python id="fp9y9q"
+start_on="human"
+```
+
+also helps ensure that the retained conversation begins with a human message rather than an isolated AI response.
+
+## Message Boundary Trimming
+
+Messages are removed as complete message objects.
+
+The implementation does not truncate message content manually.
+
+For example, the code does not perform operations such as:
+
+```python id="xqezpt"
+message.content[:100]
+```
+
+Instead, a message is either retained completely or removed from the context.
+
+This satisfies the requirement that trimming must occur on message boundaries.
+
+## Token Measurement
+
+Token usage is measured before and after trimming:
+
+```python id="jhbce4"
+before_tokens = simple_token_counter(messages)
+
+trimmed_messages = trim_history(messages)
+
+after_tokens = simple_token_counter(trimmed_messages)
+```
+
+The script reports:
+
+* configured token budget
+* token count before trimming
+* token count after trimming
+* message count before trimming
+* message count after trimming
+
+This provides measurable evidence that the trimming policy is working.
+
+## Run Task 3
+
+Run the token trimming implementation using:
+
+```bash id="dxz6pe"
+uv run python -m token_trimming.token_trimming
+```
+
+## Tests
+
+Task 3 contains automated success and failure tests.
+
+### Success Case
+
+The success test creates a conversation that exceeds a small token budget and verifies that:
+
+* the final token count is within the configured budget
+* the most recent message remains available
+* retained messages are complete original message objects
+
+### Failure Case
+
+The implementation rejects the invalid configuration by raising a `ValueError`.
+
+Run the tests using:
+
+```bash id="zmfj7s"
+uv run pytest tests/test_token_trimming.py -v
+```
+
+## Save Evidence
+
+Save the Task 3 execution output:
+
+```bash id="d5o9ji"
+uv run python -m token_trimming.token_trimming > outputs/token_trimming_output.txt
+```
+
+Save the pytest output:
+
+```bash id="8axjbg"
+uv run pytest tests/test_token_trimming.py -v > outputs/test_token_trimming.txt
+```
+
+## Guardrails
+
+The following controls are demonstrated in Task 3:
+
+* **Token budget** — conversation history is restricted to a defined maximum token count.
+* **Input/configuration validation** — zero or negative token budgets are rejected.
+* **Message-boundary trimming** — complete messages are retained or removed rather than partially truncated.
+* **Deterministic measurement** — token counts before and after trimming are reported numerically.
+
+Model-specific timeout and retry controls remain part of the model configuration introduced in Task 2.
