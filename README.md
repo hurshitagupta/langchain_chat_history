@@ -568,6 +568,216 @@ Task 4 uses the following controls:
 * **Secret hygiene** — API credentials and model configuration are loaded from environment variables.
 
 The summary acts as a fallback when older messages can no longer remain inside the active token window.
+---
+
+# Task 5 — Fact Retention Test
+
+## Objective
+
+Prove that an important fact stated 20 conversation turns earlier remains answerable even after the original message has been removed from the recent token window.
+
+This task combines the token trimming and summary memory mechanisms implemented in the previous tasks.
+
+## Implementation
+
+The test begins by storing an important fact:
+
+```python
+messages = [
+    HumanMessage(
+        content="My badge number is 7781."
+    ),
+    AIMessage(
+        content="I will remember your badge number."
+    ),
+]
+```
+
+Twenty additional conversation turns are then created:
+
+```python
+MAX_TURNS = 20
+```
+
+```python
+for turn in range(1, turn_count + 1):
+
+    messages.append(
+        HumanMessage(
+            content=(
+                f"Turn {turn}: "
+                "Tell me one short fact about LangChain."
+            )
+        )
+    )
+
+    messages.append(
+        AIMessage(
+            content=(
+                f"Turn {turn}: "
+                "LangChain helps build applications using language models."
+            )
+        )
+    )
+```
+
+Each turn contains one human message and one AI response.
+
+The filler conversation is generated locally using deterministic message objects rather than making unnecessary model calls.
+
+## Turn Validation
+
+The fact-retention test requires at least 20 turns:
+
+```python
+def validate_turn_count(turn_count: int) -> None:
+    if turn_count < 20:
+        raise ValueError(
+            "Fact retention test requires at least 20 turns."
+        )
+```
+
+This ensures the test cannot accidentally be executed with fewer turns than required by the assessment.
+
+The loop is also bounded using:
+
+```python
+MAX_TURNS = 20
+```
+rather than using an unrestricted loop.
+
+## Applying Summary Memory
+
+The summary-memory implementation from Task 4 is reused:
+
+```python
+summary, recent_history, dropped_messages = prepare_memory(messages,MAX_HISTORY_TOKENS)
+```
+
+This performs the previously implemented process:
+
+```text
+Complete conversation
+        ↓
+Token trimming
+        ↓
+Dropped old messages
+        ↓
+Summary
+        ↓
+Summary + recent history
+```
+
+The old conversation is therefore not kept entirely inside the active context.
+
+## Verifying the Original Fact Was Dropped
+
+The implementation explicitly checks whether the original badge-number message still exists in the recent history.
+
+This is important because it proves that the final answer is not simply using the original message from the recent history.
+
+Instead, the fact must survive through the summary-memory mechanism.
+
+## Fact Retention
+
+After trimming and summarisation, the model is asked:
+
+```text
+What is my badge number?
+```
+
+The summary retains the important badge-number fact even though the original message has been dropped.
+
+This demonstrates that a fact stated before 20 later conversation turns remains answerable.
+
+## Measurement
+
+The implementation reports several numeric measurements:
+
+```text
+Later turns added: 20
+Total messages: 42
+Dropped messages: X
+Recent messages kept: Y
+```
+
+It also reports:
+
+```text
+Original fact still in recent history: False
+```
+
+Together, these values provide evidence that:
+
+* 20 later turns were actually created
+* the complete history exceeded the active memory window
+* older messages were removed
+* only a limited recent history remained
+* the original fact was no longer present in recent history
+
+## Run Task 5
+
+Run the fact-retention test using:
+
+```bash
+uv run python -m fact_retention.fact_retention
+```
+
+## Tests
+
+Task 5 includes automated success and failure tests.
+
+### Success Case
+
+The success test creates the required 20 later conversation turns.
+
+The test first verifies that the original fact is no longer available in recent history.
+
+The automated test uses deterministic functions so that pytest does not depend on live model responses.
+
+### Failure Case
+
+The failure test attempts to run the retention test with only 10 turns.
+
+Because the assessment requires at least 20 turns, the implementation raises a `ValueError`.
+
+## Run Tests
+
+```bash
+uv run pytest tests/test_fact_retention.py -v
+```
+
+## Save Evidence
+
+Save the Task 5 execution output:
+
+```bash
+uv run python -m fact_retention.fact_retention > outputs/fact_retention_output.txt
+```
+
+Save the pytest output:
+
+```bash
+uv run pytest tests/test_fact_retention.py -v > outputs/test_fact_retention.txt
+```
+
+## Guardrails
+
+Task 5 uses the following controls:
+
+* **Step limit** — conversation generation is bounded to the configured number of turns.
+* **Token budget** — only recent messages fitting within the configured history budget remain active.
+* **Summary fallback** — important information from dropped messages is retained through summarisation.
+* **Turn validation** — fewer than 20 turns are rejected for the retention test.
+* **Output validation** — an empty final model response is rejected.
+* **Timeout** — model calls use a configured timeout.
+* **Retry** — model calls use capped retries.
+* **Output token limit** — model response size is restricted.
+* **Secret hygiene** — API credentials are loaded from environment variables rather than stored in source code.
+
+```
+
+The implementation demonstrates persistent session-based conversation storage, automatic history injection, controlled context size, summarisation of dropped conversation turns, and retention of important facts across long conversations.
 
 
 

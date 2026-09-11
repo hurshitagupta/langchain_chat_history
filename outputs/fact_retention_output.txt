@@ -1,0 +1,17 @@
+Later turns added: 20
+Total messages: 42
+Dropped messages: 38
+Recent messages kept: 4
+Original fact still in recent history: False
+
+Summary:
+**Summary**
+
+- **Badge number:** 7781 (the user shared this and the AI acknowledged it would remember).
+- **Interaction pattern:** The user repeatedly asked, “Tell me one short fact about LangChain,” across 18 turns (Turn 1 →
+
+Question:
+What is my badge number?
+
+Answer:
+Your badge number is **7781**.
