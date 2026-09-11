@@ -369,20 +369,6 @@ uv run python -m token_trimming.token_trimming
 
 ## Tests
 
-Task 3 contains automated success and failure tests.
-
-### Success Case
-
-The success test creates a conversation that exceeds a small token budget and verifies that:
-
-* the final token count is within the configured budget
-* the most recent message remains available
-* retained messages are complete original message objects
-
-### Failure Case
-
-The implementation rejects the invalid configuration by raising a `ValueError`.
-
 Run the tests using:
 
 ```bash id="zmfj7s"
@@ -521,24 +507,6 @@ Run the implementation using:
 
 ```bash id="sby5a9"
 uv run python -m summary_memory.summary_memory
-```
-
-## Tests
-
-Task 4 includes automated success and failure tests.
-
-### Success Case
-
-This proves that the fact is being preserved through summary memory rather than simply remaining in the recent message history.
-
-### Failure Case
-
-The failure test passes an empty summary to the summary validator. The implementation rejects it with a `ValueError`.
-
-Run the tests using:
-
-```bash id="8a2lqf"
-uv run pytest tests/test_summary_memory.py -v
 ```
 
 ## Save Evidence
@@ -723,24 +691,6 @@ Run the fact-retention test using:
 uv run python -m fact_retention.fact_retention
 ```
 
-## Tests
-
-Task 5 includes automated success and failure tests.
-
-### Success Case
-
-The success test creates the required 20 later conversation turns.
-
-The test first verifies that the original fact is no longer available in recent history.
-
-The automated test uses deterministic functions so that pytest does not depend on live model responses.
-
-### Failure Case
-
-The failure test attempts to run the retention test with only 10 turns.
-
-Because the assessment requires at least 20 turns, the implementation raises a `ValueError`.
-
 ## Run Tests
 
 ```bash
@@ -774,10 +724,6 @@ Task 5 uses the following controls:
 * **Retry** — model calls use capped retries.
 * **Output token limit** — model response size is restricted.
 * **Secret hygiene** — API credentials are loaded from environment variables rather than stored in source code.
-
-```
-
-The implementation demonstrates persistent session-based conversation storage, automatic history injection, controlled context size, summarisation of dropped conversation turns, and retention of important facts across long conversations.
 
 
 
